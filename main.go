@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	NumIterations = 5
+	NumIterations = 1000000
 )
 
 func main() {
@@ -42,7 +42,7 @@ func dkgShares(n, threshold int) {
 	shares := priPoly.Shares(n)
 	share.RecoverSecret(key.KeyGroup, shares, threshold, n)
 
-	msg := []byte("initial seed")
+	msg := []byte("42")
 	sigs := make([][]byte, n)
 	_, commits := pubPoly.Info()
 	dkgShares := make([]*key.Share, n)
@@ -63,7 +63,18 @@ func dkgShares(n, threshold int) {
 		fmt.Println(err)
 		return
 	}
-
+	g, err := os.Create("resultSignatures.txt")
+	defer g.Close()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	h, err := os.Create("resultUniform.txt")
+	defer h.Close()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 	// reconstruct collective signature
 	sig, _ := key.Scheme.Recover(pubPoly, msg, sigs, threshold, n)
 
@@ -84,6 +95,8 @@ func dkgShares(n, threshold int) {
 		//log.Println(j, randomness)
 
 		f.WriteString(fmt.Sprintf("%v\n", randomness))
+		g.WriteString(fmt.Sprintf("%v\n", newSig))
+		h.WriteString(fmt.Sprintf("%v\n", Float64(randomness)))
 		fmt.Printf("%v\n", randomness)
 	}
 
